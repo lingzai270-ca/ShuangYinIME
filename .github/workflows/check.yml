@@ -1,0 +1,58 @@
+name: check
+
+on:
+  push:
+    branches: [ main ]
+  pull_request:
+  workflow_dispatch:
+
+jobs:
+  lint-and-guard:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+
+      - name: Python 语法检查
+        run: |
+          python3 -m py_compile tools/*.py
+          echo "py_compile OK"
+
+      - name: 密钥与私人路径扫描
+        run: |
+          set -e
+          echo "扫描硬编码凭据与机器路径（命中即失败）"
+          if grep -rnE 'ghp_[A-Za-z0-9]{36}|gho_[A-Za-z0-9]{36}|github_pat_[A-Za-z0-9_]{22,}|BEGIN [A-Z ]*PRIVATE KEY|C:\\\\Users\\\\|DESKTOP-M2UEP40' \
+              --include='*.py' --include='*.java' --include='*.xml' --include='*.gradle' \
+              app tools ; then
+            echo "::error::发现疑似凭据或机器路径，请清理后再提交"
+            exit 1
+          fi
+          echo "no secret / machine path found"
+
+      - name: 清单不得申请权限
+        run: |
+          set -e
+          if grep -n 'uses-permission' app/AndroidManifest.xml; then
+            echo "::error::AndroidManifest 不得出现 uses-permission"
+            exit 1
+          fi
+          grep -q 'android:allowBackup="false"' app/AndroidManifest.xml || { echo "::error::allowBackup 必须为 false"; exit 1; }
+          echo "manifest OK"
+
+      - name: 词库与许可文件齐全
+        run: |
+          set -e
+          for f in app/assets/pinyin.bin app/assets/zhuyin.bin app/assets/japanese.bin app/assets/stroke.bin; do
+            test -s "$f" || { echo "::error::缺少 $f"; exit 1; }
+          done
+          for f in LICENSE LICENSES/README.md app/assets/licenses/00-README.txt; do
+            test -s "$f" || { echo "::error::缺少 $f"; exit 1; }
+          done
+          echo "assets OK"
+
+      - name: 源码规模自查（防止误提交生成物）
+        run: |
+          set -e
+          n=$(find app/java -name '*.java' | wc -l)
+          echo "java files: $n"
+          test "$n" -ge 15 || { echo "::error::Java 源码数量异常"; exit 1; }

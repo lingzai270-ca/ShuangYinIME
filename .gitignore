@@ -1,0 +1,29 @@
+# 构建与打包产物
+tools/build/
+build/
+*.apk
+*.aab
+
+# 签名与口令（绝对不要提交）
+*.keystore
+*.jks
+*.p12
+*.bks
+keystore/
+pass.txt
+
+# 日志与缓存
+*.log
+__pycache__/
+*.pyc
+
+# 编辑器 / 系统
+.idea/
+*.iml
+.vscode/
+.DS_Store
+Thumbs.db
+
+# 其他本地文件
+local.properties
+captures/

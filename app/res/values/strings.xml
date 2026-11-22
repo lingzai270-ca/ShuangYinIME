@@ -1,0 +1,8 @@
+<?xml version="1.0" encoding="utf-8"?>
+<resources>
+    <string name="app_name">霜音输入法</string>
+    <string name="settings_title">霜音输入法 · 设置</string>
+    <string name="subtype_pinyin">霜音 · 全拼</string>
+    <string name="subtype_zhuyin">霜音 · 注音</string>
+    <string name="keyboard_label">霜音输入法</string>
+</resources>
